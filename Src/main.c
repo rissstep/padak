@@ -102,6 +102,10 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
+
+  CanTxMsgTypeDef msg = { 0x182, 0, 0, 0, 2, { 0x12,0x34,0,0,0,0,0,0 } };
+  hcan.pTxMsg = &msg;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,6 +115,10 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+
+	  HAL_Delay(50);
+	  HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
+	  HAL_CAN_Transmit(&hcan,10);
 
   }
   /* USER CODE END 3 */
