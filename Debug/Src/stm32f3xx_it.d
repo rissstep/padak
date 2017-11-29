@@ -29,6 +29,8 @@ Src/stm32f3xx_it.o: ../Src/stm32f3xx_it.c \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_pwr_ex.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi_ex.h \
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h \
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/stm32f3xx_it.h
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h:
@@ -90,5 +92,9 @@ Src/stm32f3xx_it.o: ../Src/stm32f3xx_it.c \
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi.h:
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi_ex.h:
+
+/mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h:
+
+/mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h:
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/stm32f3xx_it.h:

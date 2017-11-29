@@ -37,9 +37,25 @@
 
 /* USER CODE BEGIN 0 */
 
+extern uint16_t jeti_uart_count;
+extern uint8_t jeti_uart_start;
+extern uint32_t timetick_ms;
+
+
+extern uint8_t pwm1_relevant;
+extern uint32_t pwm1_interval_us;
+uint8_t pwm1_counting = 0;
+extern uint8_t pwm2_relevant;
+extern uint32_t pwm2_interval_us;
+uint8_t pwm2_counting = 0;
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim17;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -182,6 +198,115 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
+
+/**
+* @brief This function handles EXTI line[9:5] interrupts.
+*/
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+	HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
+
+	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_8) != RESET){
+		if(HAL_GPIO_ReadPin(PWM1_GPIO_Port,PWM1_Pin)){
+
+				__HAL_TIM_SET_COUNTER(&htim6,0);
+				pwm1_counting = 1;
+			}else{
+				if(pwm1_counting) {
+					pwm1_interval_us = __HAL_TIM_GET_COUNTER(&htim6);
+
+					pwm1_relevant = 1;
+					pwm1_counting = 0;
+					__HAL_TIM_SET_COUNTER(&htim6,0);
+				}
+			}
+	}
+	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_9) != RESET){
+		if(HAL_GPIO_ReadPin(PWM2_GPIO_Port,PWM2_Pin)){
+			__HAL_TIM_SET_COUNTER(&htim7,0);
+			pwm2_counting = 1;
+		}else{
+			if(pwm2_counting) {
+				pwm2_interval_us = (float)(__HAL_TIM_GET_COUNTER(&htim7));
+
+				pwm2_relevant = 1;
+				pwm2_counting = 0;
+				__HAL_TIM_SET_COUNTER(&htim7,0);
+			}
+
+		}
+	}
+
+
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM1 trigger and commutation and TIM17 interrupts.
+*/
+void TIM1_TRG_COM_TIM17_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_TRG_COM_TIM17_IRQn 0 */
+	timetick_ms++;
+
+  /* USER CODE END TIM1_TRG_COM_TIM17_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim17);
+  /* USER CODE BEGIN TIM1_TRG_COM_TIM17_IRQn 1 */
+
+  /* USER CODE END TIM1_TRG_COM_TIM17_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM3 global interrupt.
+*/
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+	if(jeti_uart_start){
+			jeti_uart_count++;
+		}
+	//HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM6 global and DAC1 underrun error interrupts.
+*/
+void TIM6_DAC1_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_DAC1_IRQn 0 */
+	pwm1_interval_us = 0;
+  /* USER CODE END TIM6_DAC1_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_DAC1_IRQn 1 */
+
+
+  /* USER CODE END TIM6_DAC1_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM7 global and DAC2 underrun error interrupts.
+*/
+void TIM7_DAC2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_DAC2_IRQn 0 */
+	pwm2_interval_us = 0;
+  /* USER CODE END TIM7_DAC2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_DAC2_IRQn 1 */
+
+  /* USER CODE END TIM7_DAC2_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 

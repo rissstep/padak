@@ -46,8 +46,6 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define PWR_EN_Pin GPIO_PIN_14
-#define PWR_EN_GPIO_Port GPIOC
 #define VCC_OK_Pin GPIO_PIN_0
 #define VCC_OK_GPIO_Port GPIOA
 #define RST_3V3_Pin GPIO_PIN_1
@@ -58,8 +56,6 @@
 #define LED_GREEN_GPIO_Port GPIOB
 #define BUZZ_Pin GPIO_PIN_15
 #define BUZZ_GPIO_Port GPIOB
-#define RSTB_Pin GPIO_PIN_8
-#define RSTB_GPIO_Port GPIOA
 #define PFOB_Pin GPIO_PIN_9
 #define PFOB_GPIO_Port GPIOA
 #define CPGOOD_Pin GPIO_PIN_10
@@ -70,10 +66,12 @@
 #define EN_CHG_GPIO_Port GPIOB
 #define MODE_Pin GPIO_PIN_7
 #define MODE_GPIO_Port GPIOB
-#define PWM2_RC_Pin GPIO_PIN_8
-#define PWM2_RC_GPIO_Port GPIOB
-#define PWM1_RC_Pin GPIO_PIN_9
-#define PWM1_RC_GPIO_Port GPIOB
+#define PWM1_Pin GPIO_PIN_8
+#define PWM1_GPIO_Port GPIOB
+#define PWM1_EXTI_IRQn EXTI9_5_IRQn
+#define PWM2_Pin GPIO_PIN_9
+#define PWM2_GPIO_Port GPIOB
+#define PWM2_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 
