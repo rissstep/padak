@@ -17,7 +17,7 @@ uint8_t stack_lenght[2048];
 uint16_t p_stack_low = 0;
 uint16_t p_stack_high = 0;
 
-//extern uint32_t timetick_ms;
+extern uint32_t timetick_ms;
 
 unsigned char update_crc (unsigned char crc, unsigned char crc_seed){
 	unsigned char crc_u;
@@ -100,6 +100,8 @@ int send_jeti_data( JETI_EX_DATA * msg){
 		if(p_stack_high >= 2048) p_stack_high=0;
 	}
 
+
+
 	return 0;
 }
 
@@ -118,6 +120,7 @@ int send_jeti_text( JETI_EX_TEXT * msg){
 		if(p_stack_high >= 2048) p_stack_high=0;
 	}
 
+
 	return 0;
 }
 
@@ -126,11 +129,19 @@ void jeti_uart(){
 	static uint8_t seq_p = 0;
 	static uint8_t seq_shift = JETI_PROTOCOL_LENGHT;
 
+	static uint32_t time_between = 0;
+	static uint8_t interval_gone = 1;
 	static int16_t i = 1;
 
 	static uint8_t msg_on_sending = 0;
 
 	static uint16_t * seq;
+
+	if(timetick_ms < time_between && interval_gone == 0 ){
+		return;
+	}else{
+		interval_gone = 1;
+	}
 
 	if(p_stack_low != p_stack_high && msg_on_sending == 0){
 		msg_on_sending = 1;
@@ -138,10 +149,6 @@ void jeti_uart(){
 		seq = stack_seq[p_stack_low];
 
 	}
-
-	/*if(timetick_ms >= (time_between + 20) && !interval_gone){
-		interval_gone = 1;
-	}*/
 
 	if(jeti_uart_count >= i && msg_on_sending){
 		//HAL_GPIO_TogglePin(LD8_GPIO_Port,LD8_Pin);
@@ -164,8 +171,10 @@ void jeti_uart(){
 
 			HAL_GPIO_WritePin(SW_TX_GPIO_Port,SW_TX_Pin,1);
 			HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
-			//time_between = timetick_ms;	// tady mel byt jeste zajisten 20ms interval
-			//interval_gone =0;
+
+			time_between = timetick_ms + 20;	// tady mel byt jeste zajisten 20ms interval
+			interval_gone =0;
+			//HAL_Delay(20);
 
 			return;
 		}

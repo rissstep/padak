@@ -16,7 +16,7 @@
 #define EX_NULL 0x00
 #define JETI_TEXT_START 0xFE
 #define JETI_TEXT_STOP 0xFF
-#define JETI_PROTOCOL_LENGHT 12 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8-data frame
+#define JETI_PROTOCOL_LENGHT 13 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8-data frame
 #define SW_TX_GPIO_Port JETI_TX_GPIO_Port
 #define SW_TX_Pin JETI_TX_Pin
 
@@ -26,8 +26,8 @@ typedef struct{
 	uint16_t man_ID;
 	uint16_t dev_ID;
 	uint8_t identifier_1;
-	uint8_t data_type_1; // 1 = 1B -> 1|01|00000 = sign(zero = positive)|position of decimal point|value, 2 = 2B dtto...
-	uint16_t data_1;
+	uint8_t data_type_1; // 0 = 1B
+	uint16_t data_1; // -> 1|01|00000 = sign(zero = positive)|position of decimal point|value, 2 = 2B dtto...
 	uint8_t identifier_2;
 	uint8_t data_type_2;
 	uint16_t data_2;

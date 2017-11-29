@@ -124,17 +124,55 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   uint32_t every_xms = 0;
-
-
-
+  uint32_t every_xs = 0;
   char buffer [50] = {0};
   int n;
-
 
   JETI_EX_TEXT text_plain;
 
   CanTxMsgTypeDef msg = { 0x182, 0, 0, 0, 2, { 0x12,0x34,0,0,0,0,0,0 } };
   hcan.pTxMsg = &msg;
+
+  JETI_EX_DATA ex_data;
+  ex_data.man_ID = 0xA401;
+  ex_data.dev_ID = 0x1212;
+  ex_data.identifier_1 = 1;
+  ex_data.data_type_1 = 0;
+  ex_data.data_1 = 0x1F & 0;
+
+
+  JETI_EX_TEXT ex_text1;
+  ex_text1.man_ID = 0xA401;
+  ex_text1.dev_ID = 0x1212;
+  ex_text1.identifier = 1;
+  ex_text1.label_value = "Armed";
+  ex_text1.label_unit = "X";
+
+  JETI_EX_TEXT ex_text3;
+  ex_text3.man_ID = 0xA401;
+  ex_text3.dev_ID = 0x1212;
+  ex_text3.identifier = 0;
+  ex_text3.label_value = "Parachutte";
+  ex_text3.label_unit = "";
+
+  uint8_t text[] = {0xFE,0x20,0x20,0x20,0x2A,0x4D,0x53,0x50,0x45,0x45,0x44,0x20,0x20,0x20,0x6D,0x2F,0x73,0x20,0x20,0x03E,0x3E,0x3E,0x3E,0x3E,0x3E,0x3E,0x3E,0x20,0x31,0x30,0x30,0x2E,0x30,0xFF};
+  /*text[0] = 0xFE;
+  //sprintf(&text[1],"Parachute device.");
+  text[33] = 0xFF;*/
+  uint8_t text_l = 34;
+  uint16_t seq_text[34];
+
+  JETI_EX_TEXT ex_text_plain;
+  ex_text_plain._msg_lenght = text_l;
+  generate_seq(text,ex_text_plain._seq,text_l);
+
+  esemble_seq_data(&ex_data);
+  esemble_seq_text(&ex_text1);
+  esemble_seq_text(&ex_text3);
+
+
+
+
 
   HAL_TIM_Base_Start_IT(&htim6); // mereni pwm
   HAL_TIM_Base_Start_IT(&htim7); // mereni pwm
@@ -150,18 +188,39 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 	  jeti_uart();
-	  if(timetick_ms >= every_xms+50){
+
+
+
+	  if(timetick_ms >= every_xms+100){
+		  if(pwm1_interval_us > 150){
+			  ex_data.data_1 = 0x1F & 1;
+		  }else{
+			  ex_data.data_1 = 0x1F & 0;
+		  }
+		  esemble_seq_data(&ex_data);
 
 		  //n = sprintf (buffer, "PWM1: %u\r\n", pwm1_interval_us);
-		  n = sprintf (buffer, "PWM1: %u ||PWM2: %u \r\n", pwm1_interval_us, pwm2_interval_us);
+		  //n = sprintf (buffer, "PWM1: %u ||PWM2: %u \r\n", pwm1_interval_us, pwm2_interval_us);
 
-		  text_plain._msg_lenght = n;
+		  //text_plain._msg_lenght = n;
 
-		  generate_seq(buffer,text_plain._seq,n);
+		  //generate_seq(buffer,text_plain._seq,n);
 
-		  send_jeti_text(&text_plain);
+		  //send_jeti_text(&text_plain);
+
+		  send_jeti_data(&ex_data);
+		  send_jeti_text(&ex_text_plain);
 
 		  every_xms =timetick_ms;
+	  }
+
+	  if(timetick_ms >= every_xs+2000){
+
+		  send_jeti_text(&ex_text1);
+		  send_jeti_text(&ex_text_plain);
+		  send_jeti_text(&ex_text3);
+		  send_jeti_text(&ex_text_plain);
+		  every_xs =timetick_ms;
 	  }
 
 
