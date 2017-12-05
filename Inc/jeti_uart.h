@@ -10,13 +10,14 @@
 
 #include "stm32f3xx_hal.h"
 
+#define MSG_BUFF_SIZE 128
 #define POLY 0x07
 #define EX_SEPARATOR 0x7E
 #define EX_ID 0x6F
 #define EX_NULL 0x00
 #define JETI_TEXT_START 0xFE
 #define JETI_TEXT_STOP 0xFF
-#define JETI_PROTOCOL_LENGHT 13 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8-data frame
+#define JETI_PROTOCOL_LENGHT 12 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8bit-data frame
 #define SW_TX_GPIO_Port JETI_TX_GPIO_Port
 #define SW_TX_Pin JETI_TX_Pin
 
@@ -54,8 +55,8 @@ int has_odd_parity(uint16_t x);
 void print_bite(uint8_t b);
 void print_binary(uint16_t msg);
 void generate_seq(uint8_t * msg, uint16_t * seq, uint8_t full_length);
-int send_jeti_data(JETI_EX_DATA *msg);
-int send_jeti_text(JETI_EX_TEXT *msg);
+int send_jeti_data(JETI_EX_DATA *msg, JETI_EX_TEXT * text);
+int send_jeti_text(JETI_EX_TEXT *msg, JETI_EX_TEXT * text);
 void jeti_uart();
 
 void esemble_seq_data(JETI_EX_DATA * msg);

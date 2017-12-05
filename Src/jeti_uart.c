@@ -11,8 +11,8 @@
 uint16_t jeti_uart_count = 0;
 uint8_t jeti_uart_start = 0;
 
-uint16_t  * stack_seq[2048];
-uint8_t stack_lenght[2048];
+uint16_t stack_seq[MSG_BUFF_SIZE][34];
+uint8_t stack_lenght[MSG_BUFF_SIZE];
 
 uint16_t p_stack_low = 0;
 uint16_t p_stack_high = 0;
@@ -85,7 +85,7 @@ void generate_seq(uint8_t * msg, uint16_t * seq, uint8_t full_length){
 
 }
 
-int send_jeti_data( JETI_EX_DATA * msg){
+int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 
 	if((p_stack_low-1) == p_stack_high){
 		//pointer high dohonil low zespoda -> neni mozne pridat zpravu
@@ -93,31 +93,39 @@ int send_jeti_data( JETI_EX_DATA * msg){
 		return 1;
 
 	}else{
-		stack_seq[p_stack_high] = &msg->_seq[0];
+		memcpy(stack_seq[p_stack_high],msg->_seq,34);
+		//stack_seq[p_stack_high] = &msg->_seq[0];
 		stack_lenght[p_stack_high] = msg->_msg_lenght;
 		p_stack_high++;
 
-		if(p_stack_high >= 2048) p_stack_high=0;
+		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
 	}
 
-
+	if(text != NULL){
+		send_jeti_text(text, NULL);
+	}
 
 	return 0;
 }
 
-int send_jeti_text( JETI_EX_TEXT * msg){
+int send_jeti_text(JETI_EX_TEXT * msg, JETI_EX_TEXT * text){
 
 	if((p_stack_low-1) == p_stack_high){
 		//pointer high dohonil low zespoda -> neni mozne pridat zpravu
-		//HAL_GPIO_TogglePin(LD7_GPIO_Port,LD7_Pin);
+		HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
 		return 1;
 
 	}else{
-		stack_seq[p_stack_high] = &msg->_seq[0];
+		memcpy(stack_seq[p_stack_high],msg->_seq,34);
+		//stack_seq[p_stack_high] = &msg->_seq[0];
 		stack_lenght[p_stack_high] = msg->_msg_lenght;
 		p_stack_high++;
 
-		if(p_stack_high >= 2048) p_stack_high=0;
+		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
+	}
+
+	if(text != NULL){
+		send_jeti_text(text, NULL);
 	}
 
 
@@ -167,10 +175,9 @@ void jeti_uart(){
 			msg_on_sending = 0;
 			p_stack_low++;
 
-			if(p_stack_low >= 2048) p_stack_low = 0;
+			if(p_stack_low >= MSG_BUFF_SIZE) p_stack_low = 0;
 
 			HAL_GPIO_WritePin(SW_TX_GPIO_Port,SW_TX_Pin,1);
-			HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 
 			time_between = timetick_ms + 20;	// tady mel byt jeste zajisten 20ms interval
 			interval_gone =0;

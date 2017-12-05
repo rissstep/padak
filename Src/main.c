@@ -53,6 +53,7 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
@@ -74,11 +75,17 @@ static void MX_TIM7_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM17_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM16_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-
+void print(uint8_t * str, uint8_t size){
+	JETI_EX_TEXT text_plain;
+	text_plain._msg_lenght = size;
+	generate_seq(str,text_plain._seq,size);
+	send_jeti_text(&text_plain,NULL);
+}
 
 
 
@@ -120,6 +127,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM17_Init();
   MX_SPI1_Init();
+  MX_TIM16_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -128,10 +136,11 @@ int main(void)
   char buffer [50] = {0};
   int n;
 
-  JETI_EX_TEXT text_plain;
 
-  CanTxMsgTypeDef msg = { 0x182, 0, 0, 0, 2, { 0x12,0x34,0,0,0,0,0,0 } };
-  hcan.pTxMsg = &msg;
+
+
+  CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 8, 0,0, 0, 0, 0, 0 } };
+  hcan.pTxMsg = &msgBreak;
 
   JETI_EX_DATA ex_data;
   ex_data.man_ID = 0xA401;
@@ -155,41 +164,51 @@ int main(void)
   ex_text3.label_value = "Parachutte";
   ex_text3.label_unit = "";
 
-  uint8_t text[] = {0xFE,0x20,0x20,0x20,0x2A,0x4D,0x53,0x50,0x45,0x45,0x44,0x20,0x20,0x20,0x6D,0x2F,0x73,0x20,0x20,0x03E,0x3E,0x3E,0x3E,0x3E,0x3E,0x3E,0x3E,0x20,0x31,0x30,0x30,0x2E,0x30,0xFF};
-  /*text[0] = 0xFE;
-  //sprintf(&text[1],"Parachute device.");
-  text[33] = 0xFF;*/
+  uint8_t text[34];
+  text[0] = 0xFE;
+  sprintf(&text[1],"Flydeo parachutte device!");
+  text[33] = 0xFF;
   uint8_t text_l = 34;
-  uint16_t seq_text[34];
-
-  JETI_EX_TEXT ex_text_plain;
-  ex_text_plain._msg_lenght = text_l;
-  generate_seq(text,ex_text_plain._seq,text_l);
 
   esemble_seq_data(&ex_data);
   esemble_seq_text(&ex_text1);
   esemble_seq_text(&ex_text3);
 
+  uint8_t motor_breaking = 20;
+  motor_breaking /= 1000;
+
+  unsigned char const * const p = (unsigned char const *) &motor_breaking;
+  for (size_t i = 0; i != 4; ++i) {
+	  msgBreak.Data[2 + i] = p[i];
+  }
 
 
+
+
+  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // zakazany nabijeni
+  HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
+
+  uint8_t spiMsg[] = {0xd0,0x57};
+  uint8_t spiMsg_len = 1;
+  uint8_t spiBuf[10] ={0};
 
 
   HAL_TIM_Base_Start_IT(&htim6); // mereni pwm
   HAL_TIM_Base_Start_IT(&htim7); // mereni pwm
   HAL_TIM_Base_Start_IT(&htim3); // software UART
   HAL_TIM_Base_Start_IT(&htim17); // timetick ms
+  //HAL_TIM_Base_Start_IT(&htim16); // bzucaky
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t prd =0;
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 	  jeti_uart();
-
-
 
 	  if(timetick_ms >= every_xms+100){
 		  if(pwm1_interval_us > 150){
@@ -199,6 +218,7 @@ int main(void)
 		  }
 		  esemble_seq_data(&ex_data);
 
+
 		  //n = sprintf (buffer, "PWM1: %u\r\n", pwm1_interval_us);
 		  //n = sprintf (buffer, "PWM1: %u ||PWM2: %u \r\n", pwm1_interval_us, pwm2_interval_us);
 
@@ -207,24 +227,37 @@ int main(void)
 		  //generate_seq(buffer,text_plain._seq,n);
 
 		  //send_jeti_text(&text_plain);
+		  spiBuf[0] = 0;
+		  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,0);
+		  HAL_SPI_TransmitReceive(&hspi1,spiMsg,spiBuf,spiMsg_len,100);
+		  //HAL_SPI_Transmit(&hspi1,spiMsg,1,10);
+		  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,1);
+		  //HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,0);
+		  //HAL_SPI_TransmitReceive(&hspi1,&spiMsg[1],spiBuf,spiMsg_len,100);
+		  //HAL_SPI_Transmit(&hspi1,&spiMsg[1],1,10);
+		  //HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,1);
 
-		  send_jeti_data(&ex_data);
-		  send_jeti_text(&ex_text_plain);
+		  n = sprintf (buffer, "0x%02X ---> 0x%02X \r\n", spiMsg[0],spiBuf[0]);
+		  print(buffer, n);
+		  n = sprintf (buffer, "Pocitam: %i\r\n", prd);
+		  print(buffer, n);
 
+
+		  HAL_CAN_Transmit_IT(&hcan);
+		  HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
+
+		  prd++;
+
+		  //send_jeti_data(&ex_data, &ex_text_plain);
 		  every_xms =timetick_ms;
 	  }
 
-	  if(timetick_ms >= every_xs+2000){
-
-		  send_jeti_text(&ex_text1);
-		  send_jeti_text(&ex_text_plain);
-		  send_jeti_text(&ex_text3);
-		  send_jeti_text(&ex_text_plain);
+	  if(timetick_ms >= every_xs+5000){
+		  //HAL_GPIO_TogglePin(PWR_EN_GPIO_Port,PWR_EN_Pin);
+		  //send_jeti_text(&ex_text1, &ex_text_plain);
+		  //send_jeti_text(&ex_text3, &ex_text_plain);
 		  every_xs =timetick_ms;
 	  }
-
-
-
 
 	  //HAL_CAN_Transmit(&hcan,10);
 
@@ -370,17 +403,17 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -428,9 +461,9 @@ static void MX_TIM6_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 359;
+  htim6.Init.Prescaler = 17;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 2200;
+  htim6.Init.Period = 2000;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -465,6 +498,24 @@ static void MX_TIM7_Init(void)
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM16 init function */
+static void MX_TIM16_Init(void)
+{
+
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 35;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 181;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -508,18 +559,31 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, RST_3V3_Pin|LED_RED_Pin|LED_GREEN_Pin|BUZZ_Pin 
-                          |JETI_TX_Pin|EN_CHG_Pin|MODE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PC14 */
-  GPIO_InitStruct.Pin = GPIO_PIN_14;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, RST_3V3_Pin|EN_CHG_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED_RED_Pin|LED_GREEN_Pin|BUZZ_Pin|JETI_TX_Pin 
+                          |MODE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PWR_EN_Pin */
+  GPIO_InitStruct.Pin = PWR_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(PWR_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : RST_3V3_Pin LED_RED_Pin LED_GREEN_Pin BUZZ_Pin 
                            JETI_TX_Pin EN_CHG_Pin MODE_Pin */
@@ -530,8 +594,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA8 PFOB_Pin CPGOOD_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|PFOB_Pin|CPGOOD_Pin;
+  /*Configure GPIO pins : RSTB_Pin PFOB_Pin CPGOOD_Pin */
+  GPIO_InitStruct.Pin = RSTB_Pin|PFOB_Pin|CPGOOD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

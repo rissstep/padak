@@ -55,6 +55,7 @@ uint8_t pwm2_counting = 0;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim17;
 
 /******************************************************************************/
@@ -205,7 +206,6 @@ void SysTick_Handler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-	HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
 
 	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_8) != RESET){
 		if(HAL_GPIO_ReadPin(PWM1_GPIO_Port,PWM1_Pin)){
@@ -245,6 +245,20 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
   /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM1 update and TIM16 interrupts.
+*/
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
+	HAL_GPIO_TogglePin(BUZZ_GPIO_Port,BUZZ_Pin);
+  /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim16);
+  /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
+
+  /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 
 /**
