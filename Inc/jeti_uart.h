@@ -9,17 +9,23 @@
 #define JETI_UART_H_
 
 #include "stm32f3xx_hal.h"
+#include "defines.h"
 
-#define MSG_BUFF_SIZE 128
+#define MSG_BUFF_SIZE 64
 #define POLY 0x07
 #define EX_SEPARATOR 0x7E
 #define EX_ID 0x6F
 #define EX_NULL 0x00
 #define JETI_TEXT_START 0xFE
 #define JETI_TEXT_STOP 0xFF
-#define JETI_PROTOCOL_LENGHT 12 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8bit-data frame
+#define JETI_PROTOCOL_LENGHT 13 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8bit-data frame
 #define SW_TX_GPIO_Port JETI_TX_GPIO_Port
 #define SW_TX_Pin JETI_TX_Pin
+#define MAX_MSG_LENGHT 34
+
+
+#define INTERVAL_DATA 100 //ms
+#define INTERVAL_TEXT 2000 //s
 
 
 //!! STATICKY NA JEDEN BYTE DATA
@@ -34,7 +40,7 @@ typedef struct{
 	uint16_t data_2;
 	//I know you wont listen, but don't ever touch this members.
 	uint8_t _msg_lenght;
-	uint16_t _seq[34];
+	uint16_t _seq[MAX_MSG_LENGHT];
 
 }JETI_EX_DATA;
 
@@ -46,7 +52,7 @@ typedef struct{
 	uint8_t * label_unit;
 	//I know you wont listen, but don't ever touch this members.
 	uint8_t _msg_lenght;
-	uint16_t _seq[34];
+	uint16_t _seq[MAX_MSG_LENGHT];
 }JETI_EX_TEXT;
 
 unsigned char update_crc (unsigned char crc, unsigned char crc_seed);
@@ -62,6 +68,6 @@ void jeti_uart();
 void esemble_seq_data(JETI_EX_DATA * msg);
 void esemble_seq_text(JETI_EX_TEXT * msg);
 
-
-
+void init_jeti_msgs();
+void send_state(STATE state);
 #endif /* JETI_UART_H_ */

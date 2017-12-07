@@ -31,7 +31,8 @@ Src/jeti_uart.o: ../Src/jeti_uart.c \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_spi_ex.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h \
- /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/jeti_uart.h:
 
@@ -98,3 +99,5 @@ Src/jeti_uart.o: ../Src/jeti_uart.c \
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h:
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h:
+
+/mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h:

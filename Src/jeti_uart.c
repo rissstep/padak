@@ -11,11 +11,16 @@
 uint16_t jeti_uart_count = 0;
 uint8_t jeti_uart_start = 0;
 
-uint16_t stack_seq[MSG_BUFF_SIZE][34];
+uint16_t stack_seq[MSG_BUFF_SIZE][2*MAX_MSG_LENGHT];
 uint8_t stack_lenght[MSG_BUFF_SIZE];
 
 uint16_t p_stack_low = 0;
 uint16_t p_stack_high = 0;
+
+JETI_EX_DATA ex_data;
+JETI_EX_TEXT ex_text1;
+JETI_EX_TEXT ex_text3;
+JETI_EX_TEXT ex_text_plain;
 
 extern uint32_t timetick_ms;
 
@@ -89,20 +94,21 @@ int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 
 	if((p_stack_low-1) == p_stack_high){
 		//pointer high dohonil low zespoda -> neni mozne pridat zpravu
-		//HAL_GPIO_TogglePin(LD7_GPIO_Port,LD7_Pin);
+		HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
 		return 1;
 
 	}else{
-		memcpy(stack_seq[p_stack_high],msg->_seq,34);
-		//stack_seq[p_stack_high] = &msg->_seq[0];
-		stack_lenght[p_stack_high] = msg->_msg_lenght;
+		memcpy(&stack_seq[p_stack_high][0],&msg->_seq[0],2*msg->_msg_lenght);
+		memcpy(&stack_seq[p_stack_high][msg->_msg_lenght],&text->_seq[0],2*text->_msg_lenght);
+
+		stack_lenght[p_stack_high] = msg->_msg_lenght+text->_msg_lenght;
 		p_stack_high++;
 
 		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
 	}
 
 	if(text != NULL){
-		send_jeti_text(text, NULL);
+		//send_jeti_text(text, NULL);
 	}
 
 	return 0;
@@ -116,22 +122,24 @@ int send_jeti_text(JETI_EX_TEXT * msg, JETI_EX_TEXT * text){
 		return 1;
 
 	}else{
-		memcpy(stack_seq[p_stack_high],msg->_seq,34);
-		//stack_seq[p_stack_high] = &msg->_seq[0];
-		stack_lenght[p_stack_high] = msg->_msg_lenght;
+		memcpy(&stack_seq[p_stack_high][0],&msg->_seq[0],2*msg->_msg_lenght);
+		memcpy(&stack_seq[p_stack_high][msg->_msg_lenght],&text->_seq[0],2*text->_msg_lenght);
+
+		stack_lenght[p_stack_high] = msg->_msg_lenght+text->_msg_lenght;
 		p_stack_high++;
 
 		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
 	}
 
 	if(text != NULL){
-		send_jeti_text(text, NULL);
+		//send_jeti_text(text, NULL);
 	}
 
 
 	return 0;
 }
 
+//UNUSED
 void jeti_uart(){
 
 	static uint8_t seq_p = 0;
@@ -154,7 +162,7 @@ void jeti_uart(){
 	if(p_stack_low != p_stack_high && msg_on_sending == 0){
 		msg_on_sending = 1;
 		jeti_uart_start = 1;
-		seq = stack_seq[p_stack_low];
+		seq = &stack_seq[p_stack_low][0];
 
 	}
 
@@ -181,7 +189,7 @@ void jeti_uart(){
 
 			time_between = timetick_ms + 20;	// tady mel byt jeste zajisten 20ms interval
 			interval_gone =0;
-			//HAL_Delay(20);
+
 
 			return;
 		}
@@ -249,3 +257,73 @@ void esemble_seq_text(JETI_EX_TEXT * msg){
 	generate_seq(array,msg->_seq,msg->_msg_lenght);
 
 }
+
+void init_jeti_msgs(){
+
+	  ex_data.man_ID = 0xA401;
+	  ex_data.dev_ID = 0x1212;
+	  ex_data.identifier_1 = 1;
+	  ex_data.data_type_1 = 0;
+	  ex_data.data_1 = 0x1F & 0;
+
+
+	  ex_text1.man_ID = 0xA401;
+	  ex_text1.dev_ID = 0x1212;
+	  ex_text1.identifier = 1;
+	  ex_text1.label_value = "STATE";
+	  ex_text1.label_unit = "X";
+
+	  ex_text3.man_ID = 0xA401;
+	  ex_text3.dev_ID = 0x1212;
+	  ex_text3.identifier = 0;
+	  ex_text3.label_value = "Parachutte";
+	  ex_text3.label_unit = "";
+
+	  uint8_t text[MAX_MSG_LENGHT] = {0x20};
+	  text[0] = JETI_TEXT_START;
+	  sprintf(&text[1],"Flydeo parachutte device!");
+	  text[33] = JETI_TEXT_STOP;
+	  uint8_t text_l = MAX_MSG_LENGHT;
+
+	  ex_text_plain._msg_lenght = text_l;
+	  generate_seq(text,ex_text_plain._seq,text_l);
+
+	  esemble_seq_data(&ex_data);
+	  esemble_seq_text(&ex_text1);
+	  esemble_seq_text(&ex_text3);
+
+
+}
+
+void send_state(STATE state){
+	static uint32_t every_xms = 0;
+	static uint32_t every_xs = 0;
+
+	if(timetick_ms >= every_xms+INTERVAL_DATA){
+		ex_data.data_1 = 0x1F & state;
+		esemble_seq_data(&ex_data);
+
+		//
+
+		send_jeti_data(&ex_data, &ex_text_plain);
+
+		every_xms = timetick_ms;
+	}
+
+
+	if(timetick_ms >= every_xs+INTERVAL_TEXT){
+
+		send_jeti_text(&ex_text1, &ex_text_plain);
+		send_jeti_text(&ex_text3, &ex_text_plain);
+
+		every_xs =timetick_ms;
+	}
+
+
+	
+}
+
+
+
+
+

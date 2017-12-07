@@ -136,44 +136,8 @@ int main(void)
   char buffer [50] = {0};
   int n;
 
-
-
-
   CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 8, 0,0, 0, 0, 0, 0 } };
   hcan.pTxMsg = &msgBreak;
-
-  JETI_EX_DATA ex_data;
-  ex_data.man_ID = 0xA401;
-  ex_data.dev_ID = 0x1212;
-  ex_data.identifier_1 = 1;
-  ex_data.data_type_1 = 0;
-  ex_data.data_1 = 0x1F & 0;
-
-
-  JETI_EX_TEXT ex_text1;
-  ex_text1.man_ID = 0xA401;
-  ex_text1.dev_ID = 0x1212;
-  ex_text1.identifier = 1;
-  ex_text1.label_value = "Armed";
-  ex_text1.label_unit = "X";
-
-  JETI_EX_TEXT ex_text3;
-  ex_text3.man_ID = 0xA401;
-  ex_text3.dev_ID = 0x1212;
-  ex_text3.identifier = 0;
-  ex_text3.label_value = "Parachutte";
-  ex_text3.label_unit = "";
-
-  uint8_t text[34];
-  text[0] = 0xFE;
-  sprintf(&text[1],"Flydeo parachutte device!");
-  text[33] = 0xFF;
-  uint8_t text_l = 34;
-
-  esemble_seq_data(&ex_data);
-  esemble_seq_text(&ex_text1);
-  esemble_seq_text(&ex_text3);
-
   uint8_t motor_breaking = 20;
   motor_breaking /= 1000;
 
@@ -183,15 +147,10 @@ int main(void)
   }
 
 
-
-
   HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // zakazany nabijeni
   HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
 
-  uint8_t spiMsg[] = {0xd0,0x57};
-  uint8_t spiMsg_len = 1;
-  uint8_t spiBuf[10] ={0};
-
+  init_jeti_msgs();
 
   HAL_TIM_Base_Start_IT(&htim6); // mereni pwm
   HAL_TIM_Base_Start_IT(&htim7); // mereni pwm
@@ -208,58 +167,34 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  jeti_uart();
+
+	  //if()
+
+	  send_state(STATE_DISARMED);
 
 	  if(timetick_ms >= every_xms+100){
-		  if(pwm1_interval_us > 150){
-			  ex_data.data_1 = 0x1F & 1;
+
+
+
+		  /*if(spiBuf[0] == 0x00){
+			  HAL_TIM_Base_Start_IT(&htim16); //bzzz
 		  }else{
-			  ex_data.data_1 = 0x1F & 0;
+			  HAL_TIM_Base_Stop_IT(&htim16);
 		  }
-		  esemble_seq_data(&ex_data);
+
+		  n = sprintf (buffer, "PRdeeeel 0x%02X ---> 0x%02X \r\n", 0x96,0x99);
+		  print(buffer, n);*/
 
 
-		  //n = sprintf (buffer, "PWM1: %u\r\n", pwm1_interval_us);
-		  //n = sprintf (buffer, "PWM1: %u ||PWM2: %u \r\n", pwm1_interval_us, pwm2_interval_us);
-
-		  //text_plain._msg_lenght = n;
-
-		  //generate_seq(buffer,text_plain._seq,n);
-
-		  //send_jeti_text(&text_plain);
-		  spiBuf[0] = 0;
-		  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,0);
-		  HAL_SPI_TransmitReceive(&hspi1,spiMsg,spiBuf,spiMsg_len,100);
-		  //HAL_SPI_Transmit(&hspi1,spiMsg,1,10);
-		  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,1);
-		  //HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,0);
-		  //HAL_SPI_TransmitReceive(&hspi1,&spiMsg[1],spiBuf,spiMsg_len,100);
-		  //HAL_SPI_Transmit(&hspi1,&spiMsg[1],1,10);
-		  //HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,1);
-
-		  n = sprintf (buffer, "0x%02X ---> 0x%02X \r\n", spiMsg[0],spiBuf[0]);
-		  print(buffer, n);
-		  n = sprintf (buffer, "Pocitam: %i\r\n", prd);
-		  print(buffer, n);
 
 
-		  HAL_CAN_Transmit_IT(&hcan);
+		  //HAL_CAN_Transmit_IT(&hcan);
 		  HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 
-		  prd++;
 
 		  //send_jeti_data(&ex_data, &ex_text_plain);
 		  every_xms =timetick_ms;
 	  }
-
-	  if(timetick_ms >= every_xs+5000){
-		  //HAL_GPIO_TogglePin(PWR_EN_GPIO_Port,PWR_EN_Pin);
-		  //send_jeti_text(&ex_text1, &ex_text_plain);
-		  //send_jeti_text(&ex_text3, &ex_text_plain);
-		  every_xs =timetick_ms;
-	  }
-
-	  //HAL_CAN_Transmit(&hcan,10);
 
   }
   /* USER CODE END 3 */
