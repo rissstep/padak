@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "jeti_uart.h"
+#include "defines.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -80,14 +81,12 @@ static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-void print(uint8_t * str, uint8_t size){
+void print(char * str, uint8_t size){
 	JETI_EX_TEXT text_plain;
 	text_plain._msg_lenght = size;
-	generate_seq(str,text_plain._seq,size);
+	generate_seq((uint8_t *)(str),text_plain._seq,size);
 	send_jeti_text(&text_plain,NULL);
 }
-
-
 
 /* USER CODE END PFP */
 
@@ -148,7 +147,7 @@ int main(void)
 
 
   HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // zakazany nabijeni
-  HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
+  //HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
 
   init_jeti_msgs();
 
@@ -161,41 +160,25 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t prd =0;
+
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 
-	  //if()
-
-	  send_state(STATE_DISARMED);
-
 	  if(timetick_ms >= every_xms+100){
 
-
-
-		  /*if(spiBuf[0] == 0x00){
-			  HAL_TIM_Base_Start_IT(&htim16); //bzzz
-		  }else{
-			  HAL_TIM_Base_Stop_IT(&htim16);
-		  }
-
-		  n = sprintf (buffer, "PRdeeeel 0x%02X ---> 0x%02X \r\n", 0x96,0x99);
-		  print(buffer, n);*/
-
-
-
+		  n = sprintf (buffer, "PFOB: %i, PIN IN: %02X, CPGOOD %02X \r\n", READ_PIN(PFOB),get_PIN_IN(),get_RESIST_SQ());
+		  print(buffer, n);
 
 		  //HAL_CAN_Transmit_IT(&hcan);
-		  HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 
+		  TOGGLE(LED_GREEN);
 
 		  //send_jeti_data(&ex_data, &ex_text_plain);
 		  every_xms =timetick_ms;
 	  }
-
   }
   /* USER CODE END 3 */
 

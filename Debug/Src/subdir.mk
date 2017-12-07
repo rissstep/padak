@@ -4,7 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Src/MC33797.c \
+../Src/errors_manager.c \
 ../Src/jeti_uart.c \
 ../Src/main.c \
 ../Src/stm32f3xx_hal_msp.c \
@@ -12,7 +12,7 @@ C_SRCS += \
 ../Src/system_stm32f3xx.c 
 
 OBJS += \
-./Src/MC33797.o \
+./Src/errors_manager.o \
 ./Src/jeti_uart.o \
 ./Src/main.o \
 ./Src/stm32f3xx_hal_msp.o \
@@ -20,7 +20,7 @@ OBJS += \
 ./Src/system_stm32f3xx.o 
 
 C_DEPS += \
-./Src/MC33797.d \
+./Src/errors_manager.d \
 ./Src/jeti_uart.d \
 ./Src/main.d \
 ./Src/stm32f3xx_hal_msp.d \

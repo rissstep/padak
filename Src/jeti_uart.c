@@ -11,11 +11,11 @@
 uint16_t jeti_uart_count = 0;
 uint8_t jeti_uart_start = 0;
 
-uint16_t stack_seq[MSG_BUFF_SIZE][2*MAX_MSG_LENGHT];
-uint8_t stack_lenght[MSG_BUFF_SIZE];
+volatile uint16_t stack_seq[MSG_BUFF_SIZE][2*MAX_MSG_LENGHT];
+volatile uint8_t stack_lenght[MSG_BUFF_SIZE];
 
-uint16_t p_stack_low = 0;
-uint16_t p_stack_high = 0;
+volatile uint16_t p_stack_low = 0;
+volatile uint16_t p_stack_high = 0;
 
 JETI_EX_DATA ex_data;
 JETI_EX_TEXT ex_text1;
@@ -94,7 +94,7 @@ int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 
 	if((p_stack_low-1) == p_stack_high){
 		//pointer high dohonil low zespoda -> neni mozne pridat zpravu
-		HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
+		//HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
 		return 1;
 
 	}else{
@@ -105,10 +105,6 @@ int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 		p_stack_high++;
 
 		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
-	}
-
-	if(text != NULL){
-		//send_jeti_text(text, NULL);
 	}
 
 	return 0;
@@ -118,21 +114,22 @@ int send_jeti_text(JETI_EX_TEXT * msg, JETI_EX_TEXT * text){
 
 	if((p_stack_low-1) == p_stack_high){
 		//pointer high dohonil low zespoda -> neni mozne pridat zpravu
-		HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
+		//HAL_GPIO_TogglePin(LED_RED_GPIO_Port,LED_RED_Pin);
 		return 1;
 
 	}else{
 		memcpy(&stack_seq[p_stack_high][0],&msg->_seq[0],2*msg->_msg_lenght);
-		memcpy(&stack_seq[p_stack_high][msg->_msg_lenght],&text->_seq[0],2*text->_msg_lenght);
+		if(text !=NULL){
+			memcpy(&stack_seq[p_stack_high][msg->_msg_lenght],&text->_seq[0],2*text->_msg_lenght);
+			stack_lenght[p_stack_high] = msg->_msg_lenght+text->_msg_lenght;
+		}else{
+			stack_lenght[p_stack_high] = msg->_msg_lenght;
+		}
 
-		stack_lenght[p_stack_high] = msg->_msg_lenght+text->_msg_lenght;
+
 		p_stack_high++;
 
 		if(p_stack_high >= MSG_BUFF_SIZE) p_stack_high=0;
-	}
-
-	if(text != NULL){
-		//send_jeti_text(text, NULL);
 	}
 
 

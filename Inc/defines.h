@@ -8,10 +8,16 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+
+
+#define TOGGLE(pin) HAL_GPIO_TogglePin(pin ## _GPIO_Port, pin ## _Pin)
+#define READ_PIN(pin) HAL_GPIO_ReadPin(pin ## _GPIO_Port, pin ## _Pin)
+
+
 typedef enum {
 	STATE_DISARMED = 0,
 	STATE_ERROR = 1,
-	STATE_ARMED = -1
+	STATE_ARMED = 2
 }STATE;
 
 typedef enum {
