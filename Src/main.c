@@ -42,6 +42,7 @@
 /* USER CODE BEGIN Includes */
 #include "jeti_uart.h"
 #include "defines.h"
+#include "errors_manager.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -59,11 +60,12 @@ TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint32_t timetick_ms =0;
-uint8_t pwm1_relevant =0;
-uint32_t pwm1_interval_us =0;
-uint8_t pwm2_relevant =0;
-uint32_t pwm2_interval_us =0;
+volatile uint32_t timetick_ms =0;
+volatile uint32_t timetick_cus =0;
+volatile uint8_t pwm1_relevant =0;
+volatile uint32_t pwm1_interval_us =0;
+volatile uint8_t pwm2_relevant =0;
+volatile uint32_t pwm2_interval_us =0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,9 +133,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   uint32_t every_xms = 0;
-  uint32_t every_xs = 0;
   char buffer [50] = {0};
   int n;
+
+
+  STATE state = STATE_ERROR;
+  uint8_t error[6] = {0};
 
   CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 8, 0,0, 0, 0, 0, 0 } };
   hcan.pTxMsg = &msgBreak;
@@ -146,8 +151,8 @@ int main(void)
   }
 
 
-  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // zakazany nabijeni
-  //HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
+  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // 1 - otevreny tranzistor
+  HAL_GPIO_WritePin(RST_3V3_GPIO_Port,RST_3V3_Pin,1);
 
   init_jeti_msgs();
 
@@ -160,6 +165,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  n = sprintf (buffer, "\r\nParachutte starts!!\r\n");
+  print(buffer, n);
 
   while (1)
   {
@@ -167,18 +174,35 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
+
+
+	  if(READ_PIN(PFOB) == 0)
+	  {
+		  //HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,0);
+	  }
+
+
+
 	  if(timetick_ms >= every_xms+100){
 
-		  n = sprintf (buffer, "PFOB: %i, PIN IN: %02X, CPGOOD %02X \r\n", READ_PIN(PFOB),get_PIN_IN(),get_RESIST_SQ());
+		  //if()
+
+		  get_errors(error);
+
+
+
+		  n = sprintf (buffer, "Sc:%i VIN:%i RES:%i HIGH:%i LOW:%i PWM:%i\r\n", error[0],error[1],error[2],error[3],error[4],error[5]);
+		  //n = sprintf (buffer, "RES: %02X, PIN IN: %02X, LOW %02X \r\n", get_SPI(0xd0),get_SPI(0xc1),get_SPI(0xc3));
 		  print(buffer, n);
 
-		  //HAL_CAN_Transmit_IT(&hcan);
+		  HAL_CAN_Transmit_IT(&hcan);
 
 		  TOGGLE(LED_GREEN);
 
-		  //send_jeti_data(&ex_data, &ex_text_plain);
-		  every_xms =timetick_ms;
+		  every_xms = timetick_ms;
 	  }
+
+
   }
   /* USER CODE END 3 */
 
@@ -325,7 +349,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -447,7 +471,7 @@ static void MX_TIM17_Init(void)
   htim17.Instance = TIM17;
   htim17.Init.Prescaler = 359;
   htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 99;
+  htim17.Init.Period = 9;
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;

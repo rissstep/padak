@@ -34,7 +34,8 @@ Src/main.o: ../Src/main.c \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/jeti_uart.h \
  /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h \
- /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h \
+ /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/errors_manager.h
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/main.h:
 
@@ -107,3 +108,5 @@ Src/main.o: ../Src/main.c \
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h:
 
 /mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/defines.h:
+
+/mnt/windows/Users/Stepan/Gdrive/Kastanovo/Projekty/Flydeo/Padak/Padak/Inc/errors_manager.h:

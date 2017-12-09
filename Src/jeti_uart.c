@@ -11,11 +11,11 @@
 uint16_t jeti_uart_count = 0;
 uint8_t jeti_uart_start = 0;
 
-volatile uint16_t stack_seq[MSG_BUFF_SIZE][2*MAX_MSG_LENGHT];
-volatile uint8_t stack_lenght[MSG_BUFF_SIZE];
+ uint16_t stack_seq[MSG_BUFF_SIZE][2*MAX_MSG_LENGHT];
+uint8_t stack_lenght[MSG_BUFF_SIZE];
 
-volatile uint16_t p_stack_low = 0;
-volatile uint16_t p_stack_high = 0;
+uint16_t p_stack_low = 0;
+uint16_t p_stack_high = 0;
 
 JETI_EX_DATA ex_data;
 JETI_EX_TEXT ex_text1;

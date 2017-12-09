@@ -7,11 +7,17 @@
 #define NSS_DOWN HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,0)
 #define NSS_UP HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port,SPI1_NSS_Pin,1)
 
+//definovano pro us
+#define PWM_LOW 1000
+#define PWM_HIGH
+#define PWM_INTERVAL 100
+
 
 extern SPI_HandleTypeDef hspi1;
 
-unsigned char SPI_RESIST = 0xd0; //viz datasheet https://www.nxp.com/docs/en/data-sheet/MC33797.pdf  pg. 10
-unsigned char SPI_PIN_IN = 0xc1; //dtto
+uint8_t get_SPI(unsigned char p);
+void get_errors(uint8_t error[]);
+
 
 
 #endif /* ERRORS_MANAGER_H_ */
