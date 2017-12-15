@@ -69,5 +69,5 @@ void esemble_seq_data(JETI_EX_DATA * msg);
 void esemble_seq_text(JETI_EX_TEXT * msg);
 
 void init_jeti_msgs();
-void send_state(STATE state);
+void send_state(STATE state, uint8_t errors[],ERROR_STATUS err_status);
 #endif /* JETI_UART_H_ */

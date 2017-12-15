@@ -200,6 +200,7 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 
 
 	if(*state == STATE_FIRED) {
+		*err_status = FAIL;
 		cast_signal(SIGNAL_FIRED, NULL);
 		return;
 	}

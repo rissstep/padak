@@ -207,13 +207,15 @@ int main(void)
 			  }
 
 
-			  if(READ_PIN(PFOB) == 0 && (state != STATE_ARMED || state != STATE_FIRED)){
+			  if(errors[ERR_VOLTAGE_IN] && state != STATE_ARMED){
 				  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,0);
 				  turn_off_flag = 0;
 
-			  }else if(READ_PIN(PFOB) == 0 && (state == STATE_ARMED || state == STATE_FIRED) && turn_off_flag == 0){
+			  }else if(errors[ERR_VOLTAGE_IN] && (state == STATE_ARMED) && turn_off_flag == 0){
 				  turn_off_flag = 1;
 				  timer_turn_off = timetick_ms;
+			  }else if(!errors[ERR_VOLTAGE_IN] && turn_off_flag == 1){
+				  turn_off_flag = 0;
 			  }
 
 			  if(turn_off_flag && (timetick_ms >= timer_turn_off+10000)){
@@ -243,15 +245,19 @@ int main(void)
 
 		  every_xms = timetick_ms;
 	  }
+
 	  if(timetick_ms >= every_fire+100){
 		  if(state == STATE_ARMED){
-			  if(Fire()) state = STATE_FIRED;
+			  if(Fire()) {
+				  state = STATE_FIRED;
+			  }
 		  }
 
 		  every_fire = timetick_ms;
 	  }
 
-	  send_state(state);
+
+	  send_state(state, errors,err_status);
 
   }
   /* USER CODE END 3 */

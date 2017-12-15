@@ -100,6 +100,7 @@ int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 
 	}else{
 		memcpy(&stack_seq[p_stack_high][0],&msg->_seq[0],2*msg->_msg_lenght);
+
 		memcpy(&stack_seq[p_stack_high][msg->_msg_lenght],&text->_seq[0],2*text->_msg_lenght);
 
 		stack_lenght[p_stack_high] = msg->_msg_lenght+text->_msg_lenght;
@@ -273,13 +274,13 @@ void init_jeti_msgs(){
 	  ex_text1.dev_ID = 0x1212;
 	  ex_text1.identifier = 1;
 	  ex_text1.label_value = "STATE";
-	  ex_text1.label_unit = "X";
+	  ex_text1.label_unit = " ";
 
 	  ex_text2.man_ID = 0xA401;
 	  ex_text2.dev_ID = 0x1212;
 	  ex_text2.identifier = 2;
-	  ex_text2.label_value = "errorasd";
-	  ex_text2.label_unit = "x";
+	  ex_text2.label_value = "Error #";
+	  ex_text2.label_unit = " ";
 
 	  ex_text3.man_ID = 0xA401;
 	  ex_text3.dev_ID = 0x1212;
@@ -304,18 +305,27 @@ void init_jeti_msgs(){
 
 }
 
-void send_state(STATE state){
+void send_state(STATE state, uint8_t errors[], ERROR_STATUS err_status){
 	static uint32_t every_xms = 0;
 	static uint32_t every_xs = 0;
-
+	uint8_t err_data =0;
 	if(timetick_ms >= every_xms+INTERVAL_DATA){
+
 		ex_data.data_1 = 0x1F & state;
 
-		ex_data.data_2 = 0x1F & 5;
+
+		if(err_status == FAIL){
+			for(int i = 0; i < 6;++i){
+				err_data |= errors[i];
+				if(i != 0) err_data <<= 1;
+			}
+		}else{
+			err_data = 0;
+		}
+
+		ex_data.data_2 = err_data;
 
 		esemble_seq_data(&ex_data);
-
-		//
 
 		send_jeti_data(&ex_data, &ex_text_plain);
 
@@ -327,7 +337,7 @@ void send_state(STATE state){
 
 		send_jeti_text(&ex_text1, &ex_text_plain);
 		send_jeti_text(&ex_text2, &ex_text_plain);
-		send_jeti_text(&ex_text3, &ex_text_plain);
+		send_jeti_text(&ex_text3,  &ex_text_plain);
 
 		every_xs =timetick_ms;
 	}
