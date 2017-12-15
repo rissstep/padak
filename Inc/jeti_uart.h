@@ -18,7 +18,7 @@
 #define EX_NULL 0x00
 #define JETI_TEXT_START 0xFE
 #define JETI_TEXT_STOP 0xFF
-#define JETI_PROTOCOL_LENGHT 12 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8bit-data frame
+#define JETI_PROTOCOL_LENGHT 13 // 1 start + 9 data + 1 parity + 2 stop = 13 // 12 for 8bit-data frame
 #define SW_TX_GPIO_Port JETI_TX_GPIO_Port
 #define SW_TX_Pin JETI_TX_Pin
 #define MAX_MSG_LENGHT 34

@@ -209,8 +209,8 @@ void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
-	if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_8) != RESET) {
-		if (HAL_GPIO_ReadPin(PWM1_GPIO_Port, PWM1_Pin)) {
+	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_8) != RESET){
+		if(HAL_GPIO_ReadPin(PWM1_GPIO_Port,PWM1_Pin)){
 
 			__HAL_TIM_SET_COUNTER(&htim6, 0);
 			pwm1_counting = 1;
@@ -342,7 +342,7 @@ void TIM3_IRQHandler(void)
 			HAL_GPIO_WritePin(SW_TX_GPIO_Port, SW_TX_Pin, 1);
 
 			time_between = timetick_ms + 20;// tady mel byt jeste zajisten 20ms interval
-			interval_gone = 0;
+			//interval_gone = 0;
 
 			return;
 		}

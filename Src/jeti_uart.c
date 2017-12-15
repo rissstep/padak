@@ -19,6 +19,7 @@ uint16_t p_stack_high = 0;
 
 JETI_EX_DATA ex_data;
 JETI_EX_TEXT ex_text1;
+JETI_EX_TEXT ex_text2;
 JETI_EX_TEXT ex_text3;
 JETI_EX_TEXT ex_text_plain;
 
@@ -109,6 +110,7 @@ int send_jeti_data( JETI_EX_DATA * msg, JETI_EX_TEXT * text){
 
 	return 0;
 }
+
 
 int send_jeti_text(JETI_EX_TEXT * msg, JETI_EX_TEXT * text){
 
@@ -262,6 +264,9 @@ void init_jeti_msgs(){
 	  ex_data.identifier_1 = 1;
 	  ex_data.data_type_1 = 0;
 	  ex_data.data_1 = 0x1F & 0;
+	  ex_data.identifier_2 = 2;
+	  ex_data.data_type_2 = 0;
+	  ex_data.data_2 = 0x1F & 1;
 
 
 	  ex_text1.man_ID = 0xA401;
@@ -269,6 +274,12 @@ void init_jeti_msgs(){
 	  ex_text1.identifier = 1;
 	  ex_text1.label_value = "STATE";
 	  ex_text1.label_unit = "X";
+
+	  ex_text2.man_ID = 0xA401;
+	  ex_text2.dev_ID = 0x1212;
+	  ex_text2.identifier = 2;
+	  ex_text2.label_value = "errorasd";
+	  ex_text2.label_unit = "x";
 
 	  ex_text3.man_ID = 0xA401;
 	  ex_text3.dev_ID = 0x1212;
@@ -287,6 +298,7 @@ void init_jeti_msgs(){
 
 	  esemble_seq_data(&ex_data);
 	  esemble_seq_text(&ex_text1);
+	  esemble_seq_text(&ex_text2);
 	  esemble_seq_text(&ex_text3);
 
 
@@ -298,6 +310,9 @@ void send_state(STATE state){
 
 	if(timetick_ms >= every_xms+INTERVAL_DATA){
 		ex_data.data_1 = 0x1F & state;
+
+		ex_data.data_2 = 0x1F & 5;
+
 		esemble_seq_data(&ex_data);
 
 		//
@@ -311,6 +326,7 @@ void send_state(STATE state){
 	if(timetick_ms >= every_xs+INTERVAL_TEXT){
 
 		send_jeti_text(&ex_text1, &ex_text_plain);
+		send_jeti_text(&ex_text2, &ex_text_plain);
 		send_jeti_text(&ex_text3, &ex_text_plain);
 
 		every_xs =timetick_ms;

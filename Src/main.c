@@ -62,10 +62,8 @@ TIM_HandleTypeDef htim17;
 /* Private variables ---------------------------------------------------------*/
 volatile uint32_t timetick_ms =0;
 volatile uint32_t timetick_cus =0;
-volatile uint8_t pwm1_relevant =0;
-volatile uint32_t pwm1_interval_us =0;
-volatile uint8_t pwm2_relevant =0;
-volatile uint32_t pwm2_interval_us =0;
+volatile uint32_t pwm1_interval_us = 0;
+volatile uint32_t pwm2_interval_us = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -133,12 +131,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   uint32_t every_xms = 0;
+  uint32_t every_fire = 0;
+  uint8_t every_counter = 0;
   char buffer [50] = {0};
   int n;
 
 
   STATE state = STATE_ERROR;
-  uint8_t error[6] = {0};
+  ERROR_STATUS err_status = FAIL;
+
+  uint8_t errors[6] = {0};
+  uint8_t errors_counter[6] = {0};
 
   CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 8, 0,0, 0, 0, 0, 0 } };
   hcan.pTxMsg = &msgBreak;
@@ -165,8 +168,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  n = sprintf (buffer, "\r\nParachutte starts!!\r\n");
-  print(buffer, n);
+  //n = sprintf (buffer, "\r\n<==== Parachutte starts!! ====>\r\n");
+  //print(buffer, n);
+
+  uint32_t timer_turn_off = 0;
+  uint8_t turn_off_flag = 0;
+
+  uint8_t i =0;
+
+
+  cast_signal(SIGNAL_START, NULL);
 
   while (1)
   {
@@ -174,34 +185,73 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
+	  signal_master();
+
+	  if(timetick_ms >= every_xms+5){
+		  every_counter ++;
 
 
-	  if(READ_PIN(PFOB) == 0)
-	  {
-		  //HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,0);
-	  }
+		  get_errors(errors);
+
+		  for(i = 0; i<6;++i){errors_counter[i] += errors[i];}
+
+		  if(every_counter >= 20)
+		  {
+			  for(i = 0; i<6;++i){
+				  if(errors_counter[i] >= 10)
+					  errors[i] = 1;
+				  else
+					  errors[i] = 0;
+
+				  errors_counter[i] = 0;
+			  }
+
+
+			  if(READ_PIN(PFOB) == 0 && (state != STATE_ARMED || state != STATE_FIRED)){
+				  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,0);
+				  turn_off_flag = 0;
+
+			  }else if(READ_PIN(PFOB) == 0 && (state == STATE_ARMED || state == STATE_FIRED) && turn_off_flag == 0){
+				  turn_off_flag = 1;
+				  timer_turn_off = timetick_ms;
+			  }
+
+			  if(turn_off_flag && (timetick_ms >= timer_turn_off+10000)){
+				  HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,0);
+			  }
 
 
 
-	  if(timetick_ms >= every_xms+100){
+			  set_state(&state,&err_status,errors);
 
-		  //if()
+			  /*n = sprintf (buffer, "RES:%i HIGH:%i LOW:%i PWM:%i", errors[ERR_RESIST_SQUIB],errors[ERR_PIN_HIGH],errors[ERR_PIN_LOW],errors[ERR_PWM]);
+			  print(buffer, n);*/
 
-		  get_errors(error);
+			  /*n = sprintf (buffer, " STATUS:%i ERR:%i", state, err_status);
+			  print(buffer, n);
+			  //n = sprintf (buffer, "RES: %02X, PIN IN: %02X, LOW %02X \r\n", get_SPI(0xd0),get_SPI(0xc1),get_SPI(0xc3));
 
+			  n = sprintf (buffer, " P1: %i, P2: %i \r\n", (uint8_t)(pwm1_interval_us),(uint8_t)(pwm2_interval_us));
+			  print(buffer, n);*/
 
+			  //TOGGLE(LED_GREEN);
 
-		  n = sprintf (buffer, "Sc:%i VIN:%i RES:%i HIGH:%i LOW:%i PWM:%i\r\n", error[0],error[1],error[2],error[3],error[4],error[5]);
-		  //n = sprintf (buffer, "RES: %02X, PIN IN: %02X, LOW %02X \r\n", get_SPI(0xd0),get_SPI(0xc1),get_SPI(0xc3));
-		  print(buffer, n);
+			  every_counter =0;
 
-		  HAL_CAN_Transmit_IT(&hcan);
+		  }
 
-		  TOGGLE(LED_GREEN);
 
 		  every_xms = timetick_ms;
 	  }
+	  if(timetick_ms >= every_fire+100){
+		  if(state == STATE_ARMED){
+			  if(Fire()) state = STATE_FIRED;
+		  }
 
+		  every_fire = timetick_ms;
+	  }
+
+	  send_state(state);
 
   }
   /* USER CODE END 3 */
@@ -403,9 +453,9 @@ static void MX_TIM6_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 17;
+  htim6.Init.Prescaler = 359;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 2000;
+  htim6.Init.Period = 2200;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
