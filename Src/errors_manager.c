@@ -167,7 +167,7 @@ void get_errors(uint8_t error[]){
 		}
 
 		//Kolik je tam az na doraz - low + resist squibu je 0
-		if(error[ERR_PIN_LOW] == 0 && get_RESIST_SQ() == 0x00){
+		if(get_RESIST_SQ() == 0x00){
 			error[ERR_PIN_HIGH] = 0;
 		}else{
 			error[ERR_PIN_HIGH] = 1;
@@ -385,7 +385,7 @@ void cast_signal(SIGNAL signal, uint8_t errors[]){
 		if(OK_PIN_OUT && errors[ERR_RESIST_SQUIB]) {
 			signal_type = SIGNAL_ERROR_SQUIB; return;
 		}
-		if(OK_PIN_OUT) {
+		if((OK_PIN_OUT) || errors[ERR_PIN_LOW] == 0 ) {
 			signal_type = SIGNAL_ERROR_PIN; return;
 		}
 

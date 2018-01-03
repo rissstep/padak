@@ -214,8 +214,6 @@ int main(void)
 			  }else if(errors[ERR_VOLTAGE_IN] && (state == STATE_ARMED) && turn_off_flag == 0){
 				  turn_off_flag = 1;
 				  timer_turn_off = timetick_ms;
-			  }else if(!errors[ERR_VOLTAGE_IN] && turn_off_flag == 1){
-				  turn_off_flag = 0;
 			  }
 
 			  if(turn_off_flag && (timetick_ms >= timer_turn_off+10000)){
@@ -227,14 +225,11 @@ int main(void)
 			  set_state(&state,&err_status,errors);
 
 			  /*n = sprintf (buffer, "RES:%i HIGH:%i LOW:%i PWM:%i", errors[ERR_RESIST_SQUIB],errors[ERR_PIN_HIGH],errors[ERR_PIN_LOW],errors[ERR_PWM]);
-			  print(buffer, n);*/
-
-			  /*n = sprintf (buffer, " STATUS:%i ERR:%i", state, err_status);
 			  print(buffer, n);
-			  //n = sprintf (buffer, "RES: %02X, PIN IN: %02X, LOW %02X \r\n", get_SPI(0xd0),get_SPI(0xc1),get_SPI(0xc3));
 
-			  n = sprintf (buffer, " P1: %i, P2: %i \r\n", (uint8_t)(pwm1_interval_us),(uint8_t)(pwm2_interval_us));
+			  n = sprintf (buffer, " STATUS:%i ERR:%i \r\n", state, err_status);
 			  print(buffer, n);*/
+			  //n = sprintf (buffer, "RES: %02X, PIN IN: %02X, LOW %02X \r\n", get_SPI(0xd0),get_SPI(0xc1),get_SPI(0xc3));
 
 			  //TOGGLE(LED_GREEN);
 
