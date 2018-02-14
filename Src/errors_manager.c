@@ -22,12 +22,12 @@ extern volatile uint32_t timetick_ms;
 
 extern uint32_t pwm1_interval_us;
 extern uint32_t pwm2_interval_us;
+extern CAN_HandleTypeDef hcan;
 
 extern TIM_HandleTypeDef BUZZER_TIMER;
 
 volatile uint32_t pulling_time = 0;
 volatile uint8_t pulling_timeout = 1;
-
 
 volatile uint32_t arming_time = 0;
 volatile uint8_t arming_timeout = 1;
@@ -200,8 +200,10 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 
 
 	if(*state == STATE_FIRED) {
+		CAN_stop();
 		*err_status = FAIL;
 		cast_signal(SIGNAL_FIRED, NULL);
+
 		return;
 	}
 
@@ -413,14 +415,40 @@ uint8_t set_FIRE(){
 	NSS_UP;
 
 
-
 	return response;
 
 }
 
+
+void CAN_stop(){
+
+	static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };
+	static float motor_breaking = 20;
+	static uint8_t flag = 1;
+
+	if(flag){
+		hcan.pTxMsg = &msgBreak;
+
+		motor_breaking = 1;
+
+		unsigned char const * const p = (unsigned char const *) &motor_breaking;
+		for (size_t i = 0; i != 4; ++i) {
+		  msgBreak.Data[2 + i] = p[i];
+		}
+
+		flag = 0;
+	}
+
+	for(int i = 0;i<8;i++){
+		msgBreak.Data[0] = i;
+		HAL_CAN_Transmit(&hcan,1);
+	}
+}
+
 uint8_t Fire(){
 	if(is_PWM_fire()){
-		//set_FIRE();
+		CAN_stop();
+		set_FIRE();
 		cast_signal(SIGNAL_START, NULL);
 		return 1;
 	}else{

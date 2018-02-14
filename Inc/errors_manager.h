@@ -157,6 +157,7 @@ void get_errors(uint8_t error[]);
 void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]);
 void signal_master();
 void cast_signal(SIGNAL signal, uint8_t errors[]);
+void CAN_stop();
 uint8_t Fire();
 
 

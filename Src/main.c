@@ -143,15 +143,6 @@ int main(void)
   uint8_t errors[6] = {0};
   uint8_t errors_counter[6] = {0};
 
-  CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 8, 0,0, 0, 0, 0, 0 } };
-  hcan.pTxMsg = &msgBreak;
-  uint8_t motor_breaking = 20;
-  motor_breaking /= 1000;
-
-  unsigned char const * const p = (unsigned char const *) &motor_breaking;
-  for (size_t i = 0; i != 4; ++i) {
-	  msgBreak.Data[2 + i] = p[i];
-  }
 
 
   HAL_GPIO_WritePin(PWR_EN_GPIO_Port,PWR_EN_Pin,1); // 1 - otevreny tranzistor
@@ -223,7 +214,7 @@ int main(void)
 
 
 			  set_state(&state,&err_status,errors);
-
+			  CAN_stop();
 			  /*n = sprintf (buffer, "RES:%i HIGH:%i LOW:%i PWM:%i", errors[ERR_RESIST_SQUIB],errors[ERR_PIN_HIGH],errors[ERR_PIN_LOW],errors[ERR_PWM]);
 			  print(buffer, n);
 
