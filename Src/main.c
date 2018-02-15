@@ -214,7 +214,7 @@ int main(void)
 
 
 			  set_state(&state,&err_status,errors);
-			  CAN_stop();
+			  //CAN_stop();
 			  /*n = sprintf (buffer, "RES:%i HIGH:%i LOW:%i PWM:%i", errors[ERR_RESIST_SQUIB],errors[ERR_PIN_HIGH],errors[ERR_PIN_LOW],errors[ERR_PWM]);
 			  print(buffer, n);
 
