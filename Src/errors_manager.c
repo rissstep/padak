@@ -7,6 +7,7 @@
 
 
 #include "errors_manager.h"
+#include <string.h>
 
 unsigned char SPI_RESIST = 0xd0; //viz datasheet https://www.nxp.com/docs/en/data-sheet/MC33797.pdf  pg. 10
 unsigned char SPI_PIN_IN = 0xc1; //dtto
@@ -209,6 +210,8 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 
 
 	if(*state == STATE_DISARMED){
+		//cast_signal(SIGNAL_DISARMED, NULL);
+
 		if(OK_PIN_OUT && ERRORS_OK){
 			*state = STATE_ARMING;
 			*err_status = OK;
@@ -239,11 +242,13 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 
 
 	}else if(*state == STATE_ERROR){
+		//CAN_stop();
 		if(OK_PIN_IN && ERRORS_OK_NOT_SQUIB){
 			*state = STATE_DISARMED;
 			*err_status = OK;
-			cast_signal(SIGNAL_DISARMED, NULL);
-
+			//cast_signal(SIGNAL_DISARMED, NULL);
+			//cast_signal(SIGNAL_START, NULL);
+			 cast_signal(SIGNAL_ACTION_DISARMED, NULL);
 		}else{
 			*state = STATE_ERROR;
 			*err_status = FAIL;
@@ -255,7 +260,7 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 		if(OK_PIN_IN){
 			*state = STATE_DISARMED;
 			*err_status = OK;
-			cast_signal(SIGNAL_DISARMED, NULL);
+			cast_signal(SIGNAL_ACTION_DISARMED, NULL);
 
 		}else if(OK_PIN_OUT && ERRORS_OK){
 			if(timetick_ms >= arming_time + ARMING_TIME && arming_timeout == 0){
@@ -276,7 +281,7 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 	}else if(*state == STATE_ARMED){
 		if(OK_PIN_IN){
 			*state = STATE_DISARMED;
-			cast_signal(SIGNAL_DISARMED, NULL);
+			cast_signal(SIGNAL_ACTION_DISARMED, NULL);
 			//*err_status = OK;
 		}else if(OK_PIN_OUT && ERRORS_OK && *err_status == OK){
 			*state = STATE_ARMED;
@@ -328,6 +333,7 @@ void signal_master(){
 					case SIGNAL_ERROR_SQUIB: set_signal(SIGNAL_ERROR_SQUIB_DEF); break;
 					case SIGNAL_ERROR_PIN: set_signal(SIGNAL_ERROR_PIN_DEF); break;
 					case SIGNAL_FIRED: set_signal(SIGNAL_FIRED_DEF); break;
+					case SIGNAL_ACTION_DISARMED: set_signal(SIGNAL_ACTION_DISARMED_DEF); break;
 					default: break;
 				}
 		}
@@ -423,7 +429,7 @@ uint8_t set_FIRE(){
 void CAN_stop(){
 
 	static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };
-	static float motor_breaking = 20;
+	static float motor_breaking;
 	static uint8_t flag = 1;
 
 	if(flag){
