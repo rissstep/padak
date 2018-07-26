@@ -317,7 +317,7 @@ void send_state(STATE state, uint8_t errors[], ERROR_STATUS err_status){
 		if(err_status == FAIL){
 			for(int i = 0; i < 6;++i){
 				err_data |= errors[i];
-				if(i != 0) err_data <<= 1;
+				if(i != 5) err_data <<= 1;
 			}
 		}else{
 			err_data = 0;
@@ -337,7 +337,7 @@ void send_state(STATE state, uint8_t errors[], ERROR_STATUS err_status){
 
 		send_jeti_text(&ex_text1, &ex_text_plain);
 		send_jeti_text(&ex_text2, &ex_text_plain);
-		send_jeti_text(&ex_text3,  &ex_text_plain);
+		send_jeti_text(&ex_text3, &ex_text_plain);
 
 		every_xs =timetick_ms;
 	}
