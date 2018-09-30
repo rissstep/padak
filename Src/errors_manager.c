@@ -432,6 +432,48 @@ uint8_t set_FIRE(){
 }
 
 
+void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status){
+	static CanTxMsgTypeDef msgState = { 0x74, 0, 0, 0, 2, { 0, 0, 0,0, 0, 0, 0, 0 } };
+
+	static uint32_t every_xms = 0;
+	static uint32_t every_xs = 0;
+	uint8_t err_data =0;
+
+	if(timetick_ms >= every_xms+100){
+			hcan.pTxMsg = &msgState;
+			msgState.Data[0] = 0x1F & state;
+
+			if(err_status == FAIL){
+				for(int i = 0; i < 6;++i){
+					err_data |= errors[i];
+					if(i != 5) err_data <<= 1;
+				}
+			}else{
+				err_data = 0;
+			}
+
+			msgState.Data[1] = err_data;
+
+
+
+			HAL_CAN_Transmit(&hcan,1);
+
+			every_xms = timetick_ms;
+
+		}
+
+
+
+}
+
+
+
+
+
+
+
+
+
 void CAN_stop(){
 
 	static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };

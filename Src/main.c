@@ -243,7 +243,9 @@ int main(void)
 	  }
 
 
-	  send_state(state, errors,err_status);
+
+	  CAN_status(state, errors,err_status);
+	  //send_state(state, errors,err_status);
 
   }
   /* USER CODE END 3 */
