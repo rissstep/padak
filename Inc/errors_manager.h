@@ -169,7 +169,7 @@ void cast_signal(SIGNAL signal, uint8_t errors[]);
 void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status);
 void CAN_stop();
 uint8_t Fire();
-
+void CAN_statusDebug(STATE state, uint8_t errors[], ERROR_STATUS err_status);
 
 #endif /* ERRORS_MANAGER_H_ */
 

@@ -4,7 +4,7 @@
   * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -51,13 +51,27 @@ uint8_t pwm1_counting = 0;
 extern uint32_t pwm2_interval_us;
 uint8_t pwm2_counting = 0;
 
+extern int32_t pwm_inc[2];
+extern uint32_t pwm_v[2];
+extern uint8_t pwm_s[2];
+
+
+uint8_t ReadPWMPin(uint8_t pin){
+	switch(pin){
+		case 0: return HAL_GPIO_ReadPin(PWM1_GPIO_Port,PWM1_Pin);
+		case 1: return HAL_GPIO_ReadPin(PWM2_GPIO_Port,PWM2_Pin);
+		default: return 0;
+	}
+
+	return 0;
+}
+
 
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim6;
-extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim17;
 
@@ -88,6 +102,8 @@ void HardFault_Handler(void)
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
+    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    /* USER CODE END W1_HardFault_IRQn 0 */
   }
   /* USER CODE BEGIN HardFault_IRQn 1 */
 
@@ -104,6 +120,8 @@ void MemManage_Handler(void)
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
   {
+    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
+    /* USER CODE END W1_MemoryManagement_IRQn 0 */
   }
   /* USER CODE BEGIN MemoryManagement_IRQn 1 */
 
@@ -120,6 +138,8 @@ void BusFault_Handler(void)
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
   {
+    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
+    /* USER CODE END W1_BusFault_IRQn 0 */
   }
   /* USER CODE BEGIN BusFault_IRQn 1 */
 
@@ -136,6 +156,8 @@ void UsageFault_Handler(void)
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
   {
+    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
+    /* USER CODE END W1_UsageFault_IRQn 0 */
   }
   /* USER CODE BEGIN UsageFault_IRQn 1 */
 
@@ -202,51 +224,6 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
-
-/**
-* @brief This function handles EXTI line[9:5] interrupts.
-*/
-void EXTI9_5_IRQHandler(void)
-
-{
-  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
-	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_8) != RESET){
-		if(HAL_GPIO_ReadPin(PWM1_GPIO_Port,PWM1_Pin)){
-
-			__HAL_TIM_SET_COUNTER(&htim6, 0);
-			pwm1_counting = 1;
-		} else {
-			if (pwm1_counting) {
-				pwm1_interval_us = __HAL_TIM_GET_COUNTER(&htim6);
-
-				pwm1_counting = 0;
-				__HAL_TIM_SET_COUNTER(&htim6, 0);
-			}
-		}
-	}
-	if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_9) != RESET) {
-		if (HAL_GPIO_ReadPin(PWM2_GPIO_Port, PWM2_Pin)) {
-			__HAL_TIM_SET_COUNTER(&htim7, 0);
-			pwm2_counting = 1;
-		} else {
-			if (pwm2_counting) {
-				pwm2_interval_us = (float) (__HAL_TIM_GET_COUNTER(&htim7));
-
-				pwm2_counting = 0;
-				__HAL_TIM_SET_COUNTER(&htim7, 0);
-			}
-
-		}
-	}
-
-  /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
-  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-
-  /* USER CODE END EXTI9_5_IRQn 1 */
-}
 
 /**
 * @brief This function handles TIM1 update and TIM16 interrupts.
@@ -372,25 +349,51 @@ void TIM6_DAC1_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM6_DAC1_IRQn 0 */
 	pwm1_interval_us = 0;
+
+
+	for(int i = 0;i<2;i++){
+		if(ReadPWMPin(i)){
+			if(pwm_inc[i]<0){
+				pwm_inc[i] = 0;
+			}
+			pwm_inc[i] ++;
+			if(pwm_inc[i] > 70){
+				pwm_s[i] = 1;
+			}
+			if(pwm_inc[i] > 220){
+				pwm_s[i] = 0;
+				pwm_inc[i] = 0;
+				pwm_v[i] =0;
+			}
+		}else if(!ReadPWMPin(i)){
+			if(pwm_s[i] == 1){
+				pwm_s[i] = 0;
+				pwm_v[i] = pwm_inc[i];
+				pwm_inc[i] = 0;
+			}else{
+				if(pwm_inc[i]>0){
+					pwm_inc[i] = 0;
+				}
+
+				pwm_inc[i]--;
+				pwm_s[i] = 0;
+
+				if(pwm_inc[i] < -2500){
+					pwm_v[i] = 0;
+					pwm_inc[i] = 0;
+				}
+				//pwm0_inc = 0;
+			}
+		}
+	}
+
+
+
   /* USER CODE END TIM6_DAC1_IRQn 0 */
   HAL_TIM_IRQHandler(&htim6);
   /* USER CODE BEGIN TIM6_DAC1_IRQn 1 */
 
   /* USER CODE END TIM6_DAC1_IRQn 1 */
-}
-
-/**
-* @brief This function handles TIM7 global and DAC2 underrun error interrupts.
-*/
-void TIM7_DAC2_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM7_DAC2_IRQn 0 */
-	pwm2_interval_us = 0;
-  /* USER CODE END TIM7_DAC2_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim7);
-  /* USER CODE BEGIN TIM7_DAC2_IRQn 1 */
-
-  /* USER CODE END TIM7_DAC2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

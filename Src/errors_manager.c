@@ -23,6 +23,10 @@ extern volatile uint32_t timetick_ms;
 
 extern uint32_t pwm1_interval_us;
 extern uint32_t pwm2_interval_us;
+
+extern uint32_t pwm_v[2];
+
+
 extern CAN_HandleTypeDef hcan;
 
 extern TIM_HandleTypeDef BUZZER_TIMER;
@@ -153,7 +157,7 @@ uint8_t pwm_high(uint32_t pwm){
 }
 
 uint8_t is_PWM_steady(){
-	if(pwm_low(pwm1_interval_us) && pwm_high(pwm2_interval_us)) return 1;
+	if(pwm_low(pwm_v[0]) && pwm_high(pwm_v[1])) return 1;
 	else return 0;
 }
 
@@ -432,16 +436,59 @@ uint8_t set_FIRE(){
 }
 
 
-void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status){
-	static CanTxMsgTypeDef msgState = { 0x74, 0, 0, 0, 2, { 0, 0, 0,0, 0, 0, 0, 0 } };
-
+void CAN_statusDebug(STATE state, uint8_t errors[], ERROR_STATUS err_status){
+	//static CanTxMsgTypeDef msgState = { 0x74, 0, 0, 0, 8, { 0, 0, 0,0, 0, 0, 0, 0 } };
+	static CAN_TxHeaderTypeDef msgState = { 0x74, 0, 0, 0, 8, DISABLE};
 	static uint32_t every_xms = 0;
 	static uint32_t every_xs = 0;
 	uint8_t err_data =0;
+	static uint8_t msgStateData[8] = {0};
+	if(1){
+
+//			msgState.Data[0] = 0x1F & state;
+//
+//			if(err_status == FAIL){
+//				for(int i = 0; i < 6;++i){
+//					err_data |= errors[i];
+//					if(i != 5) err_data <<= 1;
+//				}
+//			}else{
+//				err_data = 0;
+//			}
+
+//			msgState.Data[1] = err_data;
+
+//			memcpy(&msgState.Data[0],&pwm1_interval_us,4);
+//			memcpy(&msgState.Data[4],&pwm2_interval_us,4);\
+
+
+			memcpy(&msgStateData[0],&pwm_v[0],4);
+			memcpy(&msgStateData[4],&pwm_v[1],4);
+
+
+			//HAL_CAN_Transmit(&hcan,1);
+
+			HAL_CAN_AddTxMessage(&hcan,&msgState,msgStateData,(uint32_t *)CAN_TX_MAILBOX1);
+
+		}
+
+
+
+}
+
+
+void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status){
+	//static CanTxMsgTypeDef msgState = { 0x74, 0, 0, 0, 2, { 0, 0, 0,0, 0, 0, 0, 0 } };
+	static CAN_TxHeaderTypeDef msgState = { 0x74, 0, 0, 0, 2, DISABLE};
+	static uint32_t every_xms = 0;
+	static uint32_t every_xs = 0;
+	uint8_t err_data =0;
+	static uint8_t msgStateData[8] = {0};
+
 
 	if(timetick_ms >= every_xms+100){
-			hcan.pTxMsg = &msgState;
-			msgState.Data[0] = 0x1F & state;
+			//hcan.pTxMsg = &msgState;
+		msgStateData[0] = 0x1F & state;
 
 			if(err_status == FAIL){
 				for(int i = 0; i < 6;++i){
@@ -452,11 +499,13 @@ void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status){
 				err_data = 0;
 			}
 
-			msgState.Data[1] = err_data;
+			msgStateData[1] = err_data;
 
 
+			HAL_CAN_AddTxMessage(&hcan,&msgState,msgStateData,(uint32_t *)CAN_TX_MAILBOX1);
 
-			HAL_CAN_Transmit(&hcan,1);
+
+			//HAL_CAN_Transmit(&hcan,1);
 
 			every_xms = timetick_ms;
 
@@ -468,34 +517,31 @@ void CAN_status(STATE state, uint8_t errors[], ERROR_STATUS err_status){
 
 
 
-
-
-
-
-
-
 void CAN_stop(){
 
-	static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };
+	//static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };
+	static CAN_TxHeaderTypeDef msgState = { 0x110, 0, 0, 0, 6, DISABLE};
+	static uint8_t msgStateData[8] = { 0, 15, 0,0, 0, 0, 0, 0 };
+
 	static float motor_breaking;
 	static uint8_t flag = 1;
 
 	if(flag){
-		hcan.pTxMsg = &msgBreak;
+		//hcan.pTxMsg = &msgBreak;
 
 		motor_breaking = 1;
 
 		unsigned char const * const p = (unsigned char const *) &motor_breaking;
 		for (size_t i = 0; i != 4; ++i) {
-		  msgBreak.Data[2 + i] = p[i];
+			msgStateData[2 + i] = p[i];
 		}
 
 		flag = 0;
 	}
 
 	for(int i = 0;i<8;i++){
-		msgBreak.Data[0] = i;
-		HAL_CAN_Transmit(&hcan,1);
+		msgStateData[0] = i;
+		HAL_CAN_AddTxMessage(&hcan,&msgState,msgStateData,(uint32_t *)CAN_TX_MAILBOX1);
 	}
 }
 
