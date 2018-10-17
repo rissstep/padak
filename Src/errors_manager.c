@@ -21,9 +21,8 @@ unsigned char SPI_FIRE = 0x57; //dtto
 extern volatile uint32_t timetick_cus;
 extern volatile uint32_t timetick_ms;
 
-extern uint32_t pwm1_interval_us;
-extern uint32_t pwm2_interval_us;
-
+//extern uint32_t pwm1_interval_us;
+//extern uint32_t pwm2_interval_us;
 extern uint32_t pwm_v[2];
 
 
@@ -211,7 +210,7 @@ void set_state(STATE * state,ERROR_STATUS * err_status,uint8_t errors[]){
 
 
 	if(*state == STATE_FIRED) {
-		CAN_stop();
+		//CAN_stop();
 		*err_status = FAIL;
 		cast_signal(SIGNAL_FIRED, NULL);
 
@@ -413,7 +412,7 @@ void cast_signal(SIGNAL signal, uint8_t errors[]){
 }
 
 uint8_t is_PWM_fire(){
-	if(pwm_low(pwm2_interval_us) && pwm_high(pwm1_interval_us)) return 1;
+	if(pwm_low(pwm_v[1]) && pwm_high(pwm_v[0])) return 1;
 	else return 0;
 }
 
@@ -425,6 +424,7 @@ uint8_t set_FIRE(){
 	NSS_UP;
 
 	Delay_cus(5);
+	//HAL_Delay(1);
 
 	NSS_DOWN;
 	HAL_SPI_Transmit(&hspi1,&SPI_FIRE,1,1);
@@ -522,6 +522,7 @@ void CAN_stop(){
 	//static CanTxMsgTypeDef msgBreak = { 0x110, 0, 0, 0, 6, { 0, 15, 0,0, 0, 0, 0, 0 } };
 	static CAN_TxHeaderTypeDef msgState = { 0x110, 0, 0, 0, 6, DISABLE};
 	static uint8_t msgStateData[8] = { 0, 15, 0,0, 0, 0, 0, 0 };
+	static uint32_t timeout = 0;
 
 	static float motor_breaking;
 	static uint8_t flag = 1;
@@ -541,11 +542,19 @@ void CAN_stop(){
 
 	for(int i = 0;i<8;i++){
 		msgStateData[0] = i;
-		HAL_CAN_AddTxMessage(&hcan,&msgState,msgStateData,(uint32_t *)CAN_TX_MAILBOX1);
+
+		timeout = HAL_GetTick();
+		while(HAL_CAN_AddTxMessage(&hcan,&msgState,msgStateData,(uint32_t *)CAN_TX_MAILBOX1) != HAL_OK){
+			if(HAL_GetTick() - timeout > 5) break;
+		}
+
+
 	}
 }
 
 uint8_t Fire(){
+
+
 	if(is_PWM_fire()){
 		CAN_stop();
 		set_FIRE();
